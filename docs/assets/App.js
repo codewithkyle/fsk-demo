@@ -81,16 +81,71 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./_compiled/App.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
 
-/***/ "./_compiled/App.js":
-/***/ (function(module, exports) {
+"use strict";
 
-eval("//# sourceMappingURL=app.js.map\n\n//# sourceURL=webpack:///./_compiled/App.js?");
+Object.defineProperty(exports, "__esModule", { value: true });
+const CanvasManager_1 = __webpack_require__(1);
+class App {
+    constructor() {
+        this.CanvasManager = new CanvasManager_1.default();
+    }
+}
+exports.default = App;
+/**
+ * IIFE for starting the app
+ */
+(() => {
+    new App();
+})();
+//# sourceMappingURL=App.js.map
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class CanvasManager {
+    constructor() {
+        this.canvas = document.body.querySelector('.js-canvas');
+        if (this.canvas === null) {
+            console.log(`%c[Canvas Manager] %ccouldn't find the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        else {
+            console.log(`%c[Canvas Manager] %cfound the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        this.context = this.canvas.getContext('2d');
+        console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
+        this.time = null;
+        this.init();
+    }
+    /**
+     * Called when the `CanvasManager` is constructed.
+     */
+    init() {
+        this.time = performance.now();
+        this.loop();
+    }
+    /**
+     * Called on the DOMs reapaint using `requestAnimationFrame`.
+     */
+    loop() {
+        const newTime = performance.now();
+        const deltaTime = (newTime - this.time) / 1000;
+        this.time = newTime;
+        requestAnimationFrame(() => { this.loop(); });
+    }
+}
+exports.default = CanvasManager;
+//# sourceMappingURL=CanvasManager.js.map
 
 /***/ })
-
-/******/ });
+/******/ ]);
