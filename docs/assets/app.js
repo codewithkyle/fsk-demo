@@ -104,7 +104,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=App.js.map
+//# sourceMappingURL=app.js.map
 
 /***/ }),
 /* 1 */
@@ -113,6 +113,7 @@ exports.default = App;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const Block_1 = __webpack_require__(2);
 class CanvasManager {
     constructor() {
         this.canvas = document.body.querySelector('.js-canvas');
@@ -122,30 +123,107 @@ class CanvasManager {
         else {
             console.log(`%c[Canvas Manager] %cfound the canvas element`, 'color:#f4f94f', 'color:#eee');
         }
-        this.context = this.canvas.getContext('2d');
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this._context = this.canvas.getContext('2d');
         console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
-        this.time = null;
+        this._time = null;
+        this._blocks = [];
         this.init();
     }
     /**
      * Called when the `CanvasManager` is constructed.
      */
     init() {
-        this.time = performance.now();
+        this.spawnBlocks();
+        this._time = performance.now();
         this.loop();
+    }
+    /**
+     * Used to spawn a grid of 9 `Block` objects.
+     */
+    spawnBlocks() {
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                const blockPosition = {
+                    x: (x * 48 + (x * 8)),
+                    y: (y * 48 + (y * 8))
+                };
+                const newBlock = new Block_1.default(blockPosition);
+                this._blocks.push(newBlock);
+            }
+        }
+    }
+    draw() {
+        // Clear the canvas at the beginning of each frame
+        this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (let i = 0; i < this._blocks.length; i++) {
+            this._context.fillStyle = this._blocks[i].color;
+            this._context.fillRect(this._blocks[i].position.x, this._blocks[i].position.y, this._blocks[i].size.width, this._blocks[i].size.height);
+        }
     }
     /**
      * Called on the DOMs reapaint using `requestAnimationFrame`.
      */
     loop() {
         const newTime = performance.now();
-        const deltaTime = (newTime - this.time) / 1000;
-        this.time = newTime;
+        const deltaTime = (newTime - this._time) / 1000;
+        this._time = newTime;
+        this.draw();
         requestAnimationFrame(() => { this.loop(); });
     }
 }
 exports.default = CanvasManager;
 //# sourceMappingURL=CanvasManager.js.map
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const InteractiveObject_1 = __webpack_require__(3);
+class Block extends InteractiveObject_1.default {
+    constructor(position) {
+        super(position);
+        this.size = { width: 48, height: 48 };
+    }
+    /**
+     * Called by the `InteractiveObject` class when the `Block` is constructed.
+     */
+    init() {
+    }
+}
+exports.default = Block;
+//# sourceMappingURL=Block.js.map
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class InteractiveObject {
+    constructor(pos, rot = 0) {
+        this.position = pos;
+        this.rotation = rot;
+        this.color = `rgba(${this.getRandomInt(0, 255)},${this.getRandomInt(0, 255)},${this.getRandomInt(0, 255)},0.87)`;
+        this.init();
+    }
+    getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    /**
+     * Called when the `InteractiveBlock` is constructed.
+     */
+    init() { }
+}
+exports.default = InteractiveObject;
+//# sourceMappingURL=InteractiveObject.js.map
 
 /***/ })
 /******/ ]);
