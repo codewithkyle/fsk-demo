@@ -9,3 +9,13 @@ interface ISize{
     width:  number;
     height: number;
 }
+
+interface IVelocity{
+    deltaX:  number;
+    deltaY:  number;
+}
+
+interface ICollisionResponse{
+    x:  number;
+    y:  number;
+}

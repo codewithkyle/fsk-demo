@@ -1,5 +1,9 @@
 import Block from './objects/Block';
 
+import getDistance from './utils/distance';
+import detectCollision from './utils/aabb';
+import getCollisionResponse from './utils/collisionResonse';
+
 export default class CanvasManager{
     
     // Canvas
@@ -34,21 +38,23 @@ export default class CanvasManager{
         this.spawnBlocks();
         
         this._time = performance.now();
-        this.loop();
+        requestAnimationFrame(this.loop);
     }
 
     /**
      * Used to spawn a grid of 9 `Block` objects.
      */
     private spawnBlocks():void{
+        let id = 0;
         for(let x = 0; x < 3; x++){
             for(let y = 0; y < 3; y++){
                 const blockPosition:IPosition = {
                     x: (x * 48 + (x * 8)),
                     y: (y * 48 + (y * 8))
                 };
-                const newBlock = new Block(blockPosition);
+                const newBlock = new Block(this.canvas, id, blockPosition);
                 this._blocks.push(newBlock);
+                id++;
             }
         }
     }
@@ -63,16 +69,41 @@ export default class CanvasManager{
         }
     }
 
+    private update(deltaTime:number):void{
+        // Update objects position
+        for(let i = this._blocks.length - 1; i >= 0; i--){
+            this._blocks[i].update(deltaTime);
+
+            // Check for collisions
+            for(let k = 0; k < this._blocks.length; k++){
+                if(this._blocks[i].id !== this._blocks[k].id){
+                    if(detectCollision(this._blocks[i], this._blocks[k])){
+                        
+                        // Handle collision
+                        const collisionReponse:ICollisionResponse = getCollisionResponse(this._blocks[i], this._blocks[k]);
+                        if(collisionReponse.x !== 0){
+                            this._blocks[i].position.x = collisionReponse.x;
+                        }else{
+                            this._blocks[i].position.y = collisionReponse.y;
+                            this._blocks[i].velocity.deltaY = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Called on the DOMs reapaint using `requestAnimationFrame`.
      */
-    private loop():void{
+    private loop:FrameRequestCallback = ()=>{
         const newTime:number    = performance.now();
         const deltaTime:number  = (newTime - this._time) / 1000;
         this._time               = newTime;
 
+        this.update(deltaTime);
         this.draw();
 
-        requestAnimationFrame(()=>{ this.loop() });
+        requestAnimationFrame(this.loop);
     }
 }
