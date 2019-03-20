@@ -182,15 +182,19 @@ class CanvasManager {
      * Called when the `CanvasManager` is constructed.
      */
     init() {
-        this.spawnBlocks();
+        // this.spawnBlocks();
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         this.canvas.addEventListener('mouseup', this.handleMouseUp);
         this._time = performance.now();
         requestAnimationFrame(this.loop);
     }
+    /**
+     * Called when the user presses down the mouse button.
+     * Used to spawn `Cicle` objects.
+     */
     spawnCircles() {
-        const circleCount = getRandomInt_1.default(6, 12);
+        const circleCount = getRandomInt_1.default(12, 24);
         for (let i = 0; i < circleCount; i++) {
             const position = { x: this._mouse.x, y: this._mouse.y };
             const newBubble = new Circle_1.default(this.canvas, this._bubbles.length, position);
@@ -252,8 +256,19 @@ class CanvasManager {
                 }
             }
         }
+        const deadBubbles = [];
         for (let i = 0; i < this._bubbles.length; i++) {
             this._bubbles[i].update(deltaTime);
+            if (this._bubbles[i].isDead) {
+                deadBubbles.push(this._bubbles[i]);
+            }
+        }
+        // If bubbles are marked for death, destroy them
+        if (deadBubbles.length > 0) {
+            for (let i = 0; i < deadBubbles.length; i++) {
+                const index = this._bubbles.indexOf(deadBubbles[i]);
+                this._bubbles.splice(index, 1);
+            }
         }
     }
 }
@@ -312,6 +327,7 @@ class InteractiveObject {
         this.rotation = rot;
         this.size = size;
         this.id = id;
+        this.isDead = false;
         this.color = `rgba(${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},0.87)`;
         this.velocity = { deltaX: 0, deltaY: 0 };
         this.canvas = canvas;
@@ -419,7 +435,16 @@ class Circle extends InteractiveObject_1.default {
     constructor(canvas, id, position) {
         super(canvas, id, position, { width: 48, height: 48 });
         this.radius = 0;
-        this._maxRadiusSize = getRandomInt_1.default(8, 24);
+        this._maxRadiusSize = getRandomInt_1.default(4, 32);
+        this.velocity.deltaX = getRandomInt_1.default(1, 6);
+        this.velocity.deltaY = getRandomInt_1.default(1, 6);
+        // Allow negative values
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaX *= -1;
+        }
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaY *= -1;
+        }
     }
     /**
      * Called by the `InteractiveObject` class when the `Block` is constructed.
@@ -431,11 +456,23 @@ class Circle extends InteractiveObject_1.default {
      * @param { number } deltaTime
      */
     update(deltaTime) {
+        // Adjust size until max size
         if (this.radius < this._maxRadiusSize) {
-            this.radius += (deltaTime * 128);
+            this.radius += (deltaTime * 512);
         }
         else {
             this.radius = this._maxRadiusSize;
+        }
+        this.velocity.deltaX += deltaTime * this.velocity.deltaX;
+        this.velocity.deltaY += deltaTime * this.velocity.deltaY;
+        this.position.x += this.velocity.deltaX;
+        this.position.y += this.velocity.deltaY;
+        // Get center position of the object
+        const centerXPosition = this.position.x + (this.radius / 2);
+        const centerYPosition = this.position.y + (this.radius / 2);
+        // If the circle is off the screen, kill it
+        if (centerXPosition >= this.canvas.width || centerXPosition <= 0 || centerYPosition >= this.canvas.height || centerYPosition <= 0) {
+            this.isDead = true;
         }
     }
 }

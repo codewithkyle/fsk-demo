@@ -42,7 +42,7 @@ export default class CanvasManager{
      * Called when the `CanvasManager` is constructed.
      */
     private init():void{
-        this.spawnBlocks();
+        // this.spawnBlocks();
 
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
@@ -86,8 +86,12 @@ export default class CanvasManager{
         this._mouse.y           = e.y;
     }
 
+    /**
+     * Called when the user presses down the mouse button.
+     * Used to spawn `Cicle` objects.
+     */
     private spawnCircles():void{
-        const circleCount = getRandomInt(6, 12);
+        const circleCount = getRandomInt(12, 24);
 
         for(let i = 0; i < circleCount; i++){
             const position:IPosition    = { x: this._mouse.x, y: this._mouse.y };
@@ -157,8 +161,21 @@ export default class CanvasManager{
             }
         }
 
+        const deadBubbles:Array<Circle> = [];
         for(let i = 0; i < this._bubbles.length; i++){
             this._bubbles[i].update(deltaTime);
+
+            if(this._bubbles[i].isDead){
+                deadBubbles.push(this._bubbles[i]);
+            }
+        }
+
+        // If bubbles are marked for death, destroy them
+        if(deadBubbles.length > 0){
+            for(let i = 0; i < deadBubbles.length; i++){
+                const index = this._bubbles.indexOf(deadBubbles[i]);
+                this._bubbles.splice(index, 1);
+            }
         }
     }
 

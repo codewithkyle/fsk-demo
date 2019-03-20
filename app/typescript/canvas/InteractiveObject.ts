@@ -12,6 +12,7 @@ export default class InteractiveObject{
     public velocity:    IVelocity;
     public size:        ISize;
     public id:          number;
+    public isDead:      boolean;
 
     public canvas:    HTMLCanvasElement;
     
@@ -20,6 +21,8 @@ export default class InteractiveObject{
         this.rotation   = rot;
         this.size       = size;
         this.id         = id;
+
+        this.isDead     = false;
 
         this.color      = `rgba(${ getRandomInt(0,255) },${ getRandomInt(0,255) },${ getRandomInt(0,255) },0.87)`;
 
