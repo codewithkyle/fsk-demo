@@ -104,7 +104,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=App.js.map
 
 /***/ }),
 /* 1 */

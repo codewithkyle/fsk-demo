@@ -17,7 +17,7 @@ export default class Block extends InteractiveObject{
 
     /**
      * Called on `requestAnimationFrame` from the `CanvasManager`
-     * @param { number } deltaTime 
+     * @param { number } deltaTime
      */
     update(deltaTime:number):void{
 

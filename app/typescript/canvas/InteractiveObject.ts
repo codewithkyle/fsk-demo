@@ -1,4 +1,4 @@
-import getRandomInt from './utils/getRandomInt';
+import getRandomInt from '../utils/getRandomInt';
 
 export default class InteractiveObject{
     

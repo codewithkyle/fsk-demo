@@ -13,28 +13,29 @@
             position: relative;
             box-sizing: border-box;
             overflow-x: hidden;
+            font-family: sans-serif;
         }
         canvas{
             width: 100%;
             height: 100%;
         }
-        article{
-            width: 100vw;
-            height: 100vh;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            flex-flow: column nowrap;
-        }
-        a{
-            font-size: 32px;
-            margin: 0 16px;
-        }
     </style>
 </head>
 <body>
-    <article id="homepage">
-        <a href="./demo-1.html">Demo 1</a>
+    <article id="demo-1">
+        <noscript>
+            <p>JavaScript is required. Please enable JavaScript and refresh the page to continue.</p>
+        </noscript>
+        <canvas class="js-canvas c-canvas"></canvas>
+        <div class="c-homepage-hero">
+            <div class="o-wrapper">
+                <img src="./assets/fsk-logo.png" alt="Logo">
+                <h1>First Steps Kent</h1>
+                <div class="c-homepage-hero_buttons">
+                    <a href="#" class="o-button">Learn More About Early Childhood Development</a>
+                </div>
+            </div>
+        </div>
     </article>
 </body>
 </html>

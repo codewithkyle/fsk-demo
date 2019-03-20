@@ -1,4 +1,4 @@
-import InteractiveObject from "../InteractiveObject";
+import InteractiveObject from "../canvas/InteractiveObject";
 
 export default (object1:InteractiveObject, object2:InteractiveObject)=>{
     let isColliding:boolean = false;
