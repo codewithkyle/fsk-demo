@@ -104,7 +104,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=App.js.map
+//# sourceMappingURL=app.js.map
 
 /***/ }),
 /* 1 */
@@ -114,10 +114,42 @@ exports.default = App;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const Block_1 = __webpack_require__(2);
-const aabb_1 = __webpack_require__(4);
-const collisionResonse_1 = __webpack_require__(5);
+const aabb_1 = __webpack_require__(5);
+const collisionResonse_1 = __webpack_require__(6);
+const Circle_1 = __webpack_require__(7);
+const getRandomInt_1 = __webpack_require__(4);
 class CanvasManager {
     constructor() {
+        /**
+         * Called when the user presses down the mouse button.
+         */
+        this.handleMouseDown = (e) => {
+            this._mouse.isActive = true;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = e.y;
+            this.spawnCircles();
+        };
+        /**
+         * Called whenever the mouse is moving over the canvas.
+         */
+        this.handleMouseMove = (e) => {
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = e.y;
+        };
+        /**
+         * Called when the user releases the mouse button.
+         */
+        this.handleMouseUp = (e) => {
+            this._mouse.isActive = false;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = e.y;
+        };
         /**
          * Called on the DOMs reapaint using `requestAnimationFrame`.
          */
@@ -142,6 +174,8 @@ class CanvasManager {
         console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
         this._time = null;
         this._blocks = [];
+        this._bubbles = [];
+        this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
         this.init();
     }
     /**
@@ -149,8 +183,19 @@ class CanvasManager {
      */
     init() {
         this.spawnBlocks();
+        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        this.canvas.addEventListener('mouseup', this.handleMouseUp);
         this._time = performance.now();
         requestAnimationFrame(this.loop);
+    }
+    spawnCircles() {
+        const circleCount = getRandomInt_1.default(6, 12);
+        for (let i = 0; i < circleCount; i++) {
+            const position = { x: this._mouse.x, y: this._mouse.y };
+            const newBubble = new Circle_1.default(this.canvas, this._bubbles.length, position);
+            this._bubbles.push(newBubble);
+        }
     }
     /**
      * Used to spawn a grid of 9 `Block` objects.
@@ -172,9 +217,18 @@ class CanvasManager {
     draw() {
         // Clear the canvas at the beginning of each frame
         this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Draw blocks
         for (let i = 0; i < this._blocks.length; i++) {
             this._context.fillStyle = this._blocks[i].color;
             this._context.fillRect(this._blocks[i].position.x, this._blocks[i].position.y, this._blocks[i].size.width, this._blocks[i].size.height);
+        }
+        // Draw bubbles
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._context.beginPath();
+            this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
+            this._context.fillStyle = this._bubbles[i].color;
+            this._context.fill();
+            this._context.closePath();
         }
     }
     update(deltaTime) {
@@ -197,6 +251,9 @@ class CanvasManager {
                     }
                 }
             }
+        }
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._bubbles[i].update(deltaTime);
         }
     }
 }
@@ -248,21 +305,17 @@ exports.default = Block;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
 class InteractiveObject {
     constructor(canvas, id, pos, size, rot = 0) {
         this.position = pos;
         this.rotation = rot;
         this.size = size;
         this.id = id;
-        this.color = `rgba(${this.getRandomInt(0, 255)},${this.getRandomInt(0, 255)},${this.getRandomInt(0, 255)},0.87)`;
+        this.color = `rgba(${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},0.87)`;
         this.velocity = { deltaX: 0, deltaY: 0 };
         this.canvas = canvas;
         this.init();
-    }
-    getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     /**
      * Called when the `InteractiveBlock` is constructed.
@@ -283,6 +336,24 @@ exports.default = InteractiveObject;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Gets a random int between the two provided numbers.
+ * @returns { number } `number`
+ */
+exports.default = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+//# sourceMappingURL=getRandomInt.js.map
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = (object1, object2) => {
     let isColliding = false;
     if (object1.position.x <= object2.position.x + object2.size.width && object1.position.x + object1.size.width >= object2.position.x && object1.position.y <= object2.position.y + object2.size.height && object1.position.y + object1.size.height >= object2.position.y) {
@@ -293,7 +364,7 @@ exports.default = (object1, object2) => {
 //# sourceMappingURL=aabb.js.map
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -334,6 +405,42 @@ exports.default = (object1, object2) => {
     return collisionResponse;
 };
 //# sourceMappingURL=collisionResonse.js.map
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const InteractiveObject_1 = __webpack_require__(3);
+const getRandomInt_1 = __webpack_require__(4);
+class Circle extends InteractiveObject_1.default {
+    constructor(canvas, id, position) {
+        super(canvas, id, position, { width: 48, height: 48 });
+        this.radius = 0;
+        this._maxRadiusSize = getRandomInt_1.default(8, 24);
+    }
+    /**
+     * Called by the `InteractiveObject` class when the `Block` is constructed.
+     */
+    init() {
+    }
+    /**
+     * Called on `requestAnimationFrame` from the `CanvasManager`
+     * @param { number } deltaTime
+     */
+    update(deltaTime) {
+        if (this.radius < this._maxRadiusSize) {
+            this.radius += (deltaTime * 128);
+        }
+        else {
+            this.radius = this._maxRadiusSize;
+        }
+    }
+}
+exports.default = Circle;
+//# sourceMappingURL=Circle.js.map
 
 /***/ })
 /******/ ]);

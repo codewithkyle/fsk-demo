@@ -1,3 +1,5 @@
+import getRandomInt from './utils/getRandomInt';
+
 export default class InteractiveObject{
     
     public static GRAVITY:number        = 1;
@@ -19,19 +21,13 @@ export default class InteractiveObject{
         this.size       = size;
         this.id         = id;
 
-        this.color      = `rgba(${ this.getRandomInt(0,255) },${ this.getRandomInt(0,255) },${ this.getRandomInt(0,255) },0.87)`;
+        this.color      = `rgba(${ getRandomInt(0,255) },${ getRandomInt(0,255) },${ getRandomInt(0,255) },0.87)`;
 
         this.velocity   = { deltaX: 0, deltaY: 0 };
 
         this.canvas    = canvas;
         
         this.init();
-    }
-
-    private getRandomInt(min:number, max:number):number{
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     /**

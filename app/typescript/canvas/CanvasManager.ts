@@ -1,8 +1,9 @@
 import Block from './objects/Block';
-
 import getDistance from './utils/distance';
 import detectCollision from './utils/aabb';
 import getCollisionResponse from './utils/collisionResonse';
+import Circle from './objects/Circle';
+import getRandomInt from './utils/getRandomInt';
 
 export default class CanvasManager{
     
@@ -13,8 +14,12 @@ export default class CanvasManager{
     // Timing
     private _time:  number;
 
+    // Mouse tracking
+    private _mouse:     IMouse;
+
     // Blocks
     private _blocks:    Array<Block>;
+    private _bubbles:   Array<Circle>;
     
     constructor(){
         this.canvas = document.body.querySelector('.js-canvas');
@@ -25,8 +30,10 @@ export default class CanvasManager{
         this._context = this.canvas.getContext('2d');
         console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
 
-        this._time = null;
-        this._blocks = [];
+        this._time      = null;
+        this._blocks    = [];
+        this._bubbles   = [];
+        this._mouse     = { x:0, y:0, prevX:0, prevY:0, isActive: false };
 
         this.init();
     }
@@ -36,9 +43,57 @@ export default class CanvasManager{
      */
     private init():void{
         this.spawnBlocks();
+
+        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        this.canvas.addEventListener('mouseup', this.handleMouseUp);
         
         this._time = performance.now();
         requestAnimationFrame(this.loop);
+    }
+
+    /**
+     * Called when the user presses down the mouse button.
+     */
+    private handleMouseDown:EventListener = (e:MouseEvent)=>{
+        this._mouse.isActive    = true;
+        this._mouse.prevX       = this._mouse.x;
+        this._mouse.prevY       = this._mouse.y;
+        this._mouse.x           = e.x;
+        this._mouse.y           = e.y;
+
+        this.spawnCircles();
+    }
+
+    /**
+     * Called whenever the mouse is moving over the canvas.
+     */
+    private handleMouseMove:EventListener = (e:MouseEvent)=>{
+        this._mouse.prevX   = this._mouse.x;
+        this._mouse.prevY   = this._mouse.y;
+        this._mouse.x       = e.x;
+        this._mouse.y       = e.y;
+    }
+
+    /**
+     * Called when the user releases the mouse button.
+     */
+    private handleMouseUp:EventListener = (e:MouseEvent)=>{
+        this._mouse.isActive    = false;
+        this._mouse.prevX       = this._mouse.x;
+        this._mouse.prevY       = this._mouse.y;
+        this._mouse.x           = e.x;
+        this._mouse.y           = e.y;
+    }
+
+    private spawnCircles():void{
+        const circleCount = getRandomInt(6, 12);
+
+        for(let i = 0; i < circleCount; i++){
+            const position:IPosition    = { x: this._mouse.x, y: this._mouse.y };
+            const newBubble = new Circle(this.canvas, this._bubbles.length, position);
+            this._bubbles.push(newBubble);
+        }
     }
 
     /**
@@ -63,9 +118,19 @@ export default class CanvasManager{
         // Clear the canvas at the beginning of each frame
         this._context.clearRect(0,0,this.canvas.width, this.canvas.height);
 
+        // Draw blocks
         for(let i = 0; i < this._blocks.length; i++){
             this._context.fillStyle = this._blocks[i].color;
             this._context.fillRect(this._blocks[i].position.x, this._blocks[i].position.y, this._blocks[i].size.width, this._blocks[i].size.height);
+        }
+
+        // Draw bubbles
+        for(let i = 0; i < this._bubbles.length; i++){
+            this._context.beginPath();
+            this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
+            this._context.fillStyle = this._bubbles[i].color; 
+            this._context.fill();
+            this._context.closePath();
         }
     }
 
@@ -90,6 +155,10 @@ export default class CanvasManager{
                     }
                 }
             }
+        }
+
+        for(let i = 0; i < this._bubbles.length; i++){
+            this._bubbles[i].update(deltaTime);
         }
     }
 

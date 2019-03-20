@@ -19,3 +19,11 @@ interface ICollisionResponse{
     x:  number;
     y:  number;
 }
+
+interface IMouse{
+    x:  number;
+    y:  number;
+    prevX:  number;
+    prevY:  number;
+    isActive:   boolean;
+}
