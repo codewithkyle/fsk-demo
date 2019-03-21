@@ -124,31 +124,35 @@ class CanvasManager {
          * Called when the user presses down the mouse button.
          */
         this.handleMouseDown = (e) => {
+            const scrollOffset = window.scrollY;
             this._mouse.isActive = true;
             this._mouse.prevX = this._mouse.x;
             this._mouse.prevY = this._mouse.y;
             this._mouse.x = e.x;
-            this._mouse.y = e.y;
+            this._mouse.y = (e.y + scrollOffset);
+            this._countdown = getRandomInt_1.default(1, 4);
             this.spawnCircles();
         };
         /**
          * Called whenever the mouse is moving over the canvas.
          */
         this.handleMouseMove = (e) => {
+            const scrollOffset = window.scrollY;
             this._mouse.prevX = this._mouse.x;
             this._mouse.prevY = this._mouse.y;
             this._mouse.x = e.x;
-            this._mouse.y = e.y;
+            this._mouse.y = (e.y + scrollOffset);
         };
         /**
          * Called when the user releases the mouse button.
          */
         this.handleMouseUp = (e) => {
+            const scrollOffset = window.scrollY;
             this._mouse.isActive = false;
             this._mouse.prevX = this._mouse.x;
             this._mouse.prevY = this._mouse.y;
             this._mouse.x = e.x;
-            this._mouse.y = e.y;
+            this._mouse.y = (e.y + scrollOffset);
         };
         /**
          * Called on the DOMs reapaint using `requestAnimationFrame`.
@@ -173,6 +177,7 @@ class CanvasManager {
         this._context = this.canvas.getContext('2d');
         console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
         this._time = null;
+        this._countdown = 2;
         this._blocks = [];
         this._bubbles = [];
         this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
@@ -183,9 +188,9 @@ class CanvasManager {
      */
     init() {
         // this.spawnBlocks();
-        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        document.body.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
-        this.canvas.addEventListener('mouseup', this.handleMouseUp);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
         this._time = performance.now();
         requestAnimationFrame(this.loop);
     }
@@ -236,6 +241,12 @@ class CanvasManager {
         }
     }
     update(deltaTime) {
+        // Update countdown
+        this._countdown -= deltaTime;
+        if (this._countdown <= 0) {
+            this._countdown = getRandomInt_1.default(1, 4);
+            this.spawnCircles();
+        }
         // Update objects position
         for (let i = this._blocks.length - 1; i >= 0; i--) {
             this._blocks[i].update(deltaTime);
@@ -436,8 +447,8 @@ class Circle extends InteractiveObject_1.default {
         super(canvas, id, position, { width: 48, height: 48 });
         this.radius = 0;
         this._maxRadiusSize = getRandomInt_1.default(4, 32);
-        this.velocity.deltaX = getRandomInt_1.default(1, 6);
-        this.velocity.deltaY = getRandomInt_1.default(1, 6);
+        this.velocity.deltaX = getRandomInt_1.default(1, 12);
+        this.velocity.deltaY = getRandomInt_1.default(1, 12);
         // Allow negative values
         if (getRandomInt_1.default(0, 1) === 0) {
             this.velocity.deltaX *= -1;

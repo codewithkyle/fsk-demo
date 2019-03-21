@@ -13,6 +13,7 @@ export default class CanvasManager{
 
     // Timing
     private _time:  number;
+    private _countdown: number;
 
     // Mouse tracking
     private _mouse:     IMouse;
@@ -31,6 +32,7 @@ export default class CanvasManager{
         console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
 
         this._time      = null;
+        this._countdown = 2;
         this._blocks    = [];
         this._bubbles   = [];
         this._mouse     = { x:0, y:0, prevX:0, prevY:0, isActive: false };
@@ -44,9 +46,9 @@ export default class CanvasManager{
     private init():void{
         // this.spawnBlocks();
 
-        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        document.body.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
-        this.canvas.addEventListener('mouseup', this.handleMouseUp);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
         
         this._time = performance.now();
         requestAnimationFrame(this.loop);
@@ -56,12 +58,13 @@ export default class CanvasManager{
      * Called when the user presses down the mouse button.
      */
     private handleMouseDown:EventListener = (e:MouseEvent)=>{
+        const scrollOffset      = window.scrollY;
         this._mouse.isActive    = true;
         this._mouse.prevX       = this._mouse.x;
         this._mouse.prevY       = this._mouse.y;
         this._mouse.x           = e.x;
-        this._mouse.y           = e.y;
-
+        this._mouse.y           = (e.y + scrollOffset);
+        this._countdown         = getRandomInt(1, 4);
         this.spawnCircles();
     }
 
@@ -69,21 +72,23 @@ export default class CanvasManager{
      * Called whenever the mouse is moving over the canvas.
      */
     private handleMouseMove:EventListener = (e:MouseEvent)=>{
+        const scrollOffset  = window.scrollY;
         this._mouse.prevX   = this._mouse.x;
         this._mouse.prevY   = this._mouse.y;
         this._mouse.x       = e.x;
-        this._mouse.y       = e.y;
+        this._mouse.y       = (e.y + scrollOffset);
     }
 
     /**
      * Called when the user releases the mouse button.
      */
     private handleMouseUp:EventListener = (e:MouseEvent)=>{
+        const scrollOffset      = window.scrollY;
         this._mouse.isActive    = false;
         this._mouse.prevX       = this._mouse.x;
         this._mouse.prevY       = this._mouse.y;
         this._mouse.x           = e.x;
-        this._mouse.y           = e.y;
+        this._mouse.y           = (e.y + scrollOffset);
     }
 
     /**
@@ -139,6 +144,14 @@ export default class CanvasManager{
     }
 
     private update(deltaTime:number):void{
+        // Update countdown
+        this._countdown -= deltaTime;
+
+        if(this._countdown <= 0){
+            this._countdown = getRandomInt(1, 4);
+            this.spawnCircles();
+        }
+        
         // Update objects position
         for(let i = this._blocks.length - 1; i >= 0; i--){
             this._blocks[i].update(deltaTime);

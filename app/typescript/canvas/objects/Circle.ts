@@ -14,8 +14,8 @@ export default class Circle extends InteractiveObject{
         this.radius = 0;
         this._maxRadiusSize = getRandomInt(4, 32);
 
-        this.velocity.deltaX    = getRandomInt(1,6);
-        this.velocity.deltaY    = getRandomInt(1,6);
+        this.velocity.deltaX    = getRandomInt(1,12);
+        this.velocity.deltaY    = getRandomInt(1,12);
 
         // Allow negative values
         if(getRandomInt(0, 1) === 0){ this.velocity.deltaX *= -1; }
