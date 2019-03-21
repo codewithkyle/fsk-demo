@@ -132,7 +132,7 @@ export default class CanvasManager{
         for(let i = 0; i < this._bubbles.length; i++){
             this._context.beginPath();
             this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
-            this._context.fillStyle = this._bubbles[i].color; 
+            this._context.fillStyle = this._bubbles[i].color;
             this._context.fill();
             this._context.closePath();
         }

@@ -24,7 +24,7 @@ export default class InteractiveObject{
 
         this.isDead     = false;
 
-        this.color      = `rgba(${ getRandomInt(0,255) },${ getRandomInt(0,255) },${ getRandomInt(0,255) },0.87)`;
+        this.color      = `hsla(${ getRandomInt(0,355) },${ getRandomInt(90, 98) }%,${ getRandomInt(65, 80) }%,0.87)`;
 
         this.velocity   = { deltaX: 0, deltaY: 0 };
 

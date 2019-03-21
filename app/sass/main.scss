@@ -13,9 +13,9 @@
         user-select: none;
     
         img{
-            max-width: 640px;
+            max-height: 100px;
             margin-bottom: 32px;
-            filter: drop-shadow(0 1px 2px rgba(41,41,41,0.3));
+            filter: drop-shadow(0 2px 4px rgba(41,41,41,0.15));
         }
     
         .c-homepage-hero_buttons{
@@ -24,11 +24,17 @@
         }
 
         h1{
-            font-size: 64px;
-            color: #e34a25;
-            text-shadow: 0 1px 2px rgba(#e34a25, 0.3);
+            font-size: 56px;
+            color: #f05a23;
+            text-shadow: 0 2px 4px rgba(41,41,41,0.15);
             margin: 0;
             padding: 0;
+            font-family: 'VAG';
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-left: 16px;
+            vertical-align: top;
+            margin-top: 33px;
         }
     }
     
@@ -38,12 +44,21 @@
         padding: 0 16px;
         text-transform: uppercase;
         text-decoration: none;
-        color: rgba(#e34a25, 0.87);
-        background-color: rgba(#e34a25, 0.07);
+        color: rgba(#606ab1, 0.87);
+        background-color: rgba(#eeeeee, 0.15);
+        border-width: 2px;
+        border-style: solid;
+        border-color: #eeeeee;
         height: 48px;
         display: inline-block;
         border-radius: 2px;
         pointer-events: all;
+        transition: all 150ms ease;
+
+        &:hover{
+            border-color: rgba(#606ab1, 0.87);
+            background-color: rgba(#606ab1, 0.07);
+        }
     }
 }
 
@@ -51,3 +66,9 @@
 .o-wrapper{
     display: inline-block;
 }
+
+@font-face {
+    font-family: "VAG";
+    src: url("./brand-font.ttf") format("truetype");
+    font-weight: bold;
+  }

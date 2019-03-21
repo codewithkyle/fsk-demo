@@ -104,7 +104,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=App.js.map
+//# sourceMappingURL=app.js.map
 
 /***/ }),
 /* 1 */
@@ -328,7 +328,7 @@ class InteractiveObject {
         this.size = size;
         this.id = id;
         this.isDead = false;
-        this.color = `rgba(${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},${getRandomInt_1.default(0, 255)},0.87)`;
+        this.color = `hsla(${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(90, 98)}%,${getRandomInt_1.default(65, 80)}%,0.87)`;
         this.velocity = { deltaX: 0, deltaY: 0 };
         this.canvas = canvas;
         this.init();
