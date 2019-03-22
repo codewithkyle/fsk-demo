@@ -9,6 +9,7 @@ export default class Bubble{
     public radius:      number;
     public id:          number;
     public isDead:      boolean;
+    public mass:        number;
 
     public canvas:    HTMLCanvasElement;
     
@@ -19,9 +20,10 @@ export default class Bubble{
         this.id         = id;
         this.isDead     = false;
         this.color      = `${ getRandomInt(0,355) },${ getRandomInt(96, 99) }%,${ getRandomInt(65, 70) }%`;
+        this.mass       = 1;
         this.velocity   = {
-            deltaX: getRandomInt(4,8),
-            deltaY: getRandomInt(4,8)
+            deltaX: getRandomInt(2,8),
+            deltaY: getRandomInt(2,8)
         }
         if(getRandomInt(0, 1) === 0){ this.velocity.deltaX *= -1; }
         if(getRandomInt(0, 1) === 0){ this.velocity.deltaY *= -1; }
@@ -35,6 +37,12 @@ export default class Bubble{
      * Called when the `Bubble` is constructed.
      */
     public init():void{}
+
+    public pop():void{
+        if(this.radius >= 16){
+            this.radius = this.radius / 2;
+        }
+    }
 
     public update(deltaTime:number):void{
         

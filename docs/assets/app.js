@@ -516,6 +516,14 @@ const circleCollision_1 = __webpack_require__(10);
 const rotate_1 = __webpack_require__(11);
 class CanvasManager {
     constructor() {
+        this.pause = (e) => {
+            if (e.key === ' ' && !this._paused) {
+                this._paused = true;
+            }
+            else if (e.key === ' ' && this._paused) {
+                this._paused = false;
+            }
+        };
         /**
          * Called when the user presses down the mouse button.
          */
@@ -527,6 +535,7 @@ class CanvasManager {
             this._mouse.x = e.x;
             this._mouse.y = (e.y + scrollOffset);
             this._countdown = getRandomInt_1.default(1, 4);
+            this.checkForPop();
         };
         /**
          * Called whenever the mouse is moving over the canvas.
@@ -556,7 +565,9 @@ class CanvasManager {
             const newTime = performance.now();
             const deltaTime = (newTime - this._time) / 1000;
             this._time = newTime;
-            this.update(deltaTime);
+            if (!this._paused) {
+                this.update(deltaTime);
+            }
             this.draw();
             requestAnimationFrame(this.loop);
         };
@@ -575,6 +586,8 @@ class CanvasManager {
         this._countdown = 2;
         this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
         this._bubbles = [];
+        this._id = 0;
+        this._paused = false;
         this.init();
     }
     /**
@@ -585,21 +598,79 @@ class CanvasManager {
         document.body.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         document.body.addEventListener('mouseup', this.handleMouseUp);
+        window.addEventListener('keydown', this.pause);
         this._time = performance.now();
         requestAnimationFrame(this.loop);
     }
+    checkForPop() {
+        const mousePosition = {
+            x: this._mouse.x,
+            y: this._mouse.y
+        };
+        // Check if a bubble is under the events apex
+        for (let i = 0; i < this._bubbles.length; i++) {
+            if (circleCollision_1.default(this._bubbles[i].position, mousePosition, this._bubbles[i].radius, 0)) {
+                if (this._bubbles[i].radius >= 16) {
+                    const newBubbleRadius = this._bubbles[i].radius / 2;
+                    this._bubbles[i].pop();
+                    const numberOfBubbles = getRandomInt_1.default(2, 4);
+                    for (let i = 0; i <= numberOfBubbles; i++) {
+                        const randomPosition = {
+                            x: mousePosition.x,
+                            y: mousePosition.y
+                        };
+                        const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, newBubbleRadius);
+                        this._bubbles.push(newBubble);
+                        this._id++;
+                    }
+                }
+                return;
+            }
+        }
+    }
     spawnBubbles() {
         const minNumber = Math.floor(window.innerWidth / 100);
-        const maxNumber = Math.floor(window.innerWidth / 100) + 4;
+        const maxNumber = Math.floor(window.innerWidth / 100);
         const numberOfBubbles = getRandomInt_1.default(minNumber, maxNumber);
-        // const numberOfBubbles = 2;
+        // Huge bubbles
         for (let i = 0; i <= numberOfBubbles; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(64, (this.canvas.width - 64)) - 4,
+                y: getRandomInt_1.default(64, (this.canvas.height - 64))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+        // Large bubbles
+        for (let i = 0; i <= numberOfBubbles - 4; i++) {
             const randomPosition = {
                 x: getRandomInt_1.default(64, (this.canvas.width - 64)),
                 y: getRandomInt_1.default(64, (this.canvas.height - 64))
             };
-            const newBubble = new Bubble_1.default(this.canvas, i, randomPosition);
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, 32);
             this._bubbles.push(newBubble);
+            this._id++;
+        }
+        // Medium bubbles
+        for (let i = 0; i <= numberOfBubbles - 6; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(64, (this.canvas.width - 64)),
+                y: getRandomInt_1.default(64, (this.canvas.height - 64))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, 16);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+        // Small bubbles
+        for (let i = 0; i <= numberOfBubbles - 8; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(64, (this.canvas.width - 64)),
+                y: getRandomInt_1.default(64, (this.canvas.height - 64))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, 8);
+            this._bubbles.push(newBubble);
+            this._id++;
         }
     }
     resolveCollision(bubble1, bubble2) {
@@ -612,8 +683,8 @@ class CanvasManager {
             // Grab angle between the two colliding particles
             const angle = -Math.atan2(bubble2.position.y - bubble1.position.y, bubble2.position.x - bubble1.position.x);
             // Store mass in var for better readability in collision equation
-            const m1 = 1;
-            const m2 = 1;
+            const m1 = bubble1.mass;
+            const m2 = bubble2.mass;
             // Velocity before equation
             const u1 = rotate_1.default(bubble1.velocity, angle);
             const u2 = rotate_1.default(bubble2.velocity, angle);
@@ -682,9 +753,10 @@ class Bubble {
         this.id = id;
         this.isDead = false;
         this.color = `${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(96, 99)}%,${getRandomInt_1.default(65, 70)}%`;
+        this.mass = 1;
         this.velocity = {
-            deltaX: getRandomInt_1.default(4, 8),
-            deltaY: getRandomInt_1.default(4, 8)
+            deltaX: getRandomInt_1.default(2, 8),
+            deltaY: getRandomInt_1.default(2, 8)
         };
         if (getRandomInt_1.default(0, 1) === 0) {
             this.velocity.deltaX *= -1;
@@ -699,6 +771,11 @@ class Bubble {
      * Called when the `Bubble` is constructed.
      */
     init() { }
+    pop() {
+        if (this.radius >= 16) {
+            this.radius = this.radius / 2;
+        }
+    }
     update(deltaTime) {
         // Apply friction
         // if(this.velocity.deltaX >= 1){

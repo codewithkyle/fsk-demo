@@ -18,6 +18,9 @@ export default class CanvasManager{
     
     // Bubbles
     private _bubbles:   Array<Bubble>;
+    private _id:        number;
+
+    private _paused:    boolean;
 
     constructor(){
         this.canvas = document.body.querySelector('.js-canvas');
@@ -32,6 +35,8 @@ export default class CanvasManager{
         this._countdown = 2;
         this._mouse     = { x:0, y:0, prevX:0, prevY:0, isActive: false };
         this._bubbles   = [];
+        this._id        = 0;
+        this._paused    = false;
 
         this.init();
     }
@@ -45,9 +50,20 @@ export default class CanvasManager{
         document.body.addEventListener('mousedown', this.handleMouseDown);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         document.body.addEventListener('mouseup', this.handleMouseUp);
+
+        window.addEventListener('keydown', this.pause);
         
         this._time = performance.now();
         requestAnimationFrame(this.loop);
+    }
+
+    private pause:EventListener = (e:KeyboardEvent)=>{
+        if(e.key === ' ' && !this._paused){
+            this._paused = true;
+        }
+        else if(e.key === ' ' && this._paused){
+            this._paused = false;
+        }
     }
 
     /**
@@ -61,6 +77,8 @@ export default class CanvasManager{
         this._mouse.x           = e.x;
         this._mouse.y           = (e.y + scrollOffset);
         this._countdown         = getRandomInt(1, 4);
+
+        this.checkForPop();
     }
 
     /**
@@ -86,18 +104,82 @@ export default class CanvasManager{
         this._mouse.y           = (e.y + scrollOffset);
     }
 
+    private checkForPop():void{
+        const mousePosition:IPosition = {
+            x: this._mouse.x,
+            y: this._mouse.y
+        }
+        // Check if a bubble is under the events apex
+        for(let i = 0; i < this._bubbles.length; i++){
+            if(checkCollision(this._bubbles[i].position, mousePosition, this._bubbles[i].radius, 0)){
+                if(this._bubbles[i].radius >= 16){
+                    const newBubbleRadius = this._bubbles[i].radius / 2;
+                    this._bubbles[i].pop();
+
+                    const numberOfBubbles = getRandomInt(2, 4);
+                    for(let i = 0; i <= numberOfBubbles; i++){
+                        const randomPosition:IPosition ={
+                            x: mousePosition.x,
+                            y: mousePosition.y
+                        }
+                        const newBubble = new Bubble(this.canvas, this._id, randomPosition, newBubbleRadius);
+                        this._bubbles.push(newBubble);
+                        this._id++;
+                    }
+                }
+
+                return;
+            }
+        }
+    }
+
     private spawnBubbles():void{
         const minNumber = Math.floor(window.innerWidth / 100);
-        const maxNumber = Math.floor(window.innerWidth / 100) + 4;
+        const maxNumber = Math.floor(window.innerWidth / 100);
         const numberOfBubbles = getRandomInt(minNumber, maxNumber);
-        // const numberOfBubbles = 2;
+
+        // Huge bubbles
         for(let i = 0; i <= numberOfBubbles; i++){
+            const randomPosition:IPosition ={
+                x: getRandomInt(64, (this.canvas.width - 64)) - 4,
+                y: getRandomInt(64, (this.canvas.height - 64))
+            }
+            const newBubble = new Bubble(this.canvas, this._id, randomPosition);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+
+        // Large bubbles
+        for(let i = 0; i <= numberOfBubbles - 4; i++){
             const randomPosition:IPosition ={
                 x: getRandomInt(64, (this.canvas.width - 64)),
                 y: getRandomInt(64, (this.canvas.height - 64))
             }
-            const newBubble = new Bubble(this.canvas, i, randomPosition);
+            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 32);
             this._bubbles.push(newBubble);
+            this._id++;
+        }
+
+        // Medium bubbles
+        for(let i = 0; i <= numberOfBubbles - 6; i++){
+            const randomPosition:IPosition ={
+                x: getRandomInt(64, (this.canvas.width - 64)),
+                y: getRandomInt(64, (this.canvas.height - 64))
+            }
+            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 16);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+
+        // Small bubbles
+        for(let i = 0; i <= numberOfBubbles - 8; i++){
+            const randomPosition:IPosition ={
+                x: getRandomInt(64, (this.canvas.width - 64)),
+                y: getRandomInt(64, (this.canvas.height - 64))
+            }
+            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 8);
+            this._bubbles.push(newBubble);
+            this._id++;
         }
     }
 
@@ -115,8 +197,8 @@ export default class CanvasManager{
             const angle = -Math.atan2(bubble2.position.y - bubble1.position.y, bubble2.position.x - bubble1.position.x);
 
             // Store mass in var for better readability in collision equation
-            const m1 = 1;
-            const m2 = 1;
+            const m1 = bubble1.mass;
+            const m2 = bubble2.mass;
 
             // Velocity before equation
             const u1 = rotate(bubble1.velocity, angle);
@@ -185,7 +267,9 @@ export default class CanvasManager{
         const deltaTime:number  = (newTime - this._time) / 1000;
         this._time               = newTime;
 
-        this.update(deltaTime);
+        if(!this._paused){
+            this.update(deltaTime);
+        }
         this.draw();
 
         requestAnimationFrame(this.loop);
