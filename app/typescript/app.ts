@@ -1,10 +1,23 @@
-import CanvasManager from './canvas/CanvasManager';
+import CanvasManager from './demo1/CanvasManager';
+import CanvasManager2 from './demo2/CanvasManager';
 
 export default class App{
-    private CanvasManager:CanvasManager;
-
     constructor(){
-        this.CanvasManager = new CanvasManager();
+        this.init();
+    }
+
+    private init():void{
+        const canvas = document.body.querySelector('.js-canvas');
+        const demo = parseInt(canvas.getAttribute('data-demo'));
+
+        switch(demo){
+            case 1:
+                new CanvasManager();
+                break;
+            case 2:
+                new CanvasManager2();
+            break;
+        }
     }
 }
 

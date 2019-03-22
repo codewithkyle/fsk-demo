@@ -92,9 +92,22 @@
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const CanvasManager_1 = __webpack_require__(1);
+const CanvasManager_2 = __webpack_require__(8);
 class App {
     constructor() {
-        this.CanvasManager = new CanvasManager_1.default();
+        this.init();
+    }
+    init() {
+        const canvas = document.body.querySelector('.js-canvas');
+        const demo = parseInt(canvas.getAttribute('data-demo'));
+        switch (demo) {
+            case 1:
+                new CanvasManager_1.default();
+                break;
+            case 2:
+                new CanvasManager_2.default();
+                break;
+        }
     }
 }
 exports.default = App;
@@ -104,7 +117,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=App.js.map
 
 /***/ }),
 /* 1 */
@@ -489,6 +502,280 @@ class Circle extends InteractiveObject_1.default {
 }
 exports.default = Circle;
 //# sourceMappingURL=Circle.js.map
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+const Bubble_1 = __webpack_require__(9);
+const circleCollision_1 = __webpack_require__(10);
+const rotate_1 = __webpack_require__(11);
+class CanvasManager {
+    constructor() {
+        /**
+         * Called when the user presses down the mouse button.
+         */
+        this.handleMouseDown = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = true;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+            this._countdown = getRandomInt_1.default(1, 4);
+        };
+        /**
+         * Called whenever the mouse is moving over the canvas.
+         */
+        this.handleMouseMove = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called when the user releases the mouse button.
+         */
+        this.handleMouseUp = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = false;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called on the DOMs reapaint using `requestAnimationFrame`.
+         */
+        this.loop = () => {
+            const newTime = performance.now();
+            const deltaTime = (newTime - this._time) / 1000;
+            this._time = newTime;
+            this.update(deltaTime);
+            this.draw();
+            requestAnimationFrame(this.loop);
+        };
+        this.canvas = document.body.querySelector('.js-canvas');
+        if (this.canvas === null) {
+            console.log(`%c[Canvas Manager] %ccouldn't find the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        else {
+            console.log(`%c[Canvas Manager] %cfound the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this._context = this.canvas.getContext('2d');
+        console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
+        this._time = null;
+        this._countdown = 2;
+        this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
+        this._bubbles = [];
+        this.init();
+    }
+    /**
+     * Called when the `CanvasManager` is constructed.
+     */
+    init() {
+        this.spawnBubbles();
+        document.body.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
+        this._time = performance.now();
+        requestAnimationFrame(this.loop);
+    }
+    spawnBubbles() {
+        const numberOfBubbles = getRandomInt_1.default(14, 26);
+        // const numberOfBubbles = 2;
+        for (let i = 0; i <= numberOfBubbles; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(64, (this.canvas.width - 64)),
+                y: getRandomInt_1.default(64, (this.canvas.height - 64))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, i, randomPosition);
+            this._bubbles.push(newBubble);
+        }
+    }
+    resolveCollision(bubble1, bubble2) {
+        const xVelocityDiff = bubble1.velocity.deltaX - bubble2.velocity.deltaX;
+        const yVelocityDiff = bubble1.velocity.deltaY - bubble2.velocity.deltaY;
+        const xDist = bubble2.position.x - bubble1.position.x;
+        const yDist = bubble2.position.y - bubble1.position.y;
+        // Prevent accidental overlap of particles
+        if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+            // Grab angle between the two colliding particles
+            const angle = -Math.atan2(bubble2.position.y - bubble1.position.y, bubble2.position.x - bubble1.position.x);
+            // Store mass in var for better readability in collision equation
+            const m1 = 1;
+            const m2 = 1;
+            // Velocity before equation
+            const u1 = rotate_1.default(bubble1.velocity, angle);
+            const u2 = rotate_1.default(bubble2.velocity, angle);
+            // Velocity after 1d collision equation
+            const v1 = { deltaX: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), deltaY: u1.y };
+            const v2 = { deltaX: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), deltaY: u2.y };
+            // Final velocity after rotating axis back to original location
+            const vFinal1 = rotate_1.default(v1, -angle);
+            const vFinal2 = rotate_1.default(v2, -angle);
+            // Swap particle velocities for realistic bounce effect
+            bubble1.velocity.deltaX = vFinal1.x;
+            bubble1.velocity.deltaY = vFinal1.y;
+            bubble2.velocity.deltaX = vFinal2.x;
+            bubble2.velocity.deltaY = vFinal2.y;
+        }
+    }
+    draw() {
+        // Clear the canvas at the beginning of each frame
+        this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Draw bubbles
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._context.beginPath();
+            this._context.shadowColor = `hsla(${this._bubbles[i].color}, 0.3)`;
+            this._context.shadowBlur = this._bubbles[i].radius;
+            this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
+            this._context.fillStyle = `hsla(${this._bubbles[i].color}, 0.87)`;
+            this._context.fill();
+            this._context.closePath();
+        }
+    }
+    update(deltaTime) {
+        // Update countdown
+        this._countdown -= deltaTime;
+        if (this._countdown <= 0) {
+            this._countdown = getRandomInt_1.default(1, 4);
+        }
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._bubbles[i].update(deltaTime);
+            // Check for collision
+            for (let k = 0; k < this._bubbles.length; k++) {
+                if (this._bubbles[i].id !== this._bubbles[k].id) {
+                    if (circleCollision_1.default(this._bubbles[i].position, this._bubbles[k].position, this._bubbles[i].radius, this._bubbles[k].radius)) {
+                        this.resolveCollision(this._bubbles[i], this._bubbles[k]);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.default = CanvasManager;
+//# sourceMappingURL=CanvasManager.js.map
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+class Bubble {
+    constructor(canvas, id, pos, size = 64, rot = 0) {
+        this.position = pos;
+        this.rotation = rot;
+        this.radius = size;
+        this.id = id;
+        this.isDead = false;
+        this.color = `${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(96, 99)}%,${getRandomInt_1.default(65, 70)}%`;
+        this.velocity = {
+            deltaX: getRandomInt_1.default(4, 8),
+            deltaY: getRandomInt_1.default(4, 8)
+        };
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaX *= -1;
+        }
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaY *= -1;
+        }
+        this.canvas = canvas;
+        this.init();
+    }
+    /**
+     * Called when the `Bubble` is constructed.
+     */
+    init() { }
+    update(deltaTime) {
+        // Apply friction
+        // if(this.velocity.deltaX >= 1){
+        //     this.velocity.deltaX *= 0.99;
+        // }
+        // if(this.velocity.deltaY >= 1){
+        //     this.velocity.deltaY *= 0.99;
+        // }
+        // Update position
+        this.position.x += this.velocity.deltaX;
+        this.position.y += this.velocity.deltaY;
+        // Check for out of bounds
+        const right = this.position.x + (this.radius / 2);
+        const bottom = this.position.y + (this.radius / 2);
+        const left = this.position.x - (this.radius / 2);
+        const top = this.position.y - (this.radius / 2);
+        if (left < 0) {
+            // Hit screen left
+            this.position.x = this.radius / 2;
+            this.velocity.deltaX *= -1;
+        }
+        if (top < 0) {
+            // Hit screen top
+            this.position.y = this.radius / 2;
+            this.velocity.deltaY *= -1;
+        }
+        if (right > this.canvas.width) {
+            // Hit screen right
+            this.position.x = (this.canvas.width - (this.radius / 2));
+            this.velocity.deltaX *= -1;
+        }
+        if (bottom > this.canvas.height) {
+            // Hit screen bottom
+            this.position.y = (this.canvas.height - (this.radius / 2));
+            this.velocity.deltaY *= -1;
+        }
+    }
+}
+exports.default = Bubble;
+//# sourceMappingURL=Bubble.js.map
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Gets the distance between two points.
+ * @returns `distance`
+ */
+exports.default = (pos1, pos2, radius1, radius2) => {
+    let isColliding = false;
+    const xDistance = (pos1.x - pos2.x);
+    const yDistance = (pos1.y - pos2.y);
+    const distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+    if (distance < (radius1 + radius2)) {
+        isColliding = true;
+    }
+    return isColliding;
+};
+//# sourceMappingURL=circleCollision.js.map
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = (velocity, angle) => {
+    const rotatedVelocities = {
+        x: velocity.deltaX * Math.cos(angle) - velocity.deltaY * Math.sin(angle),
+        y: velocity.deltaX * Math.sin(angle) + velocity.deltaY * Math.cos(angle)
+    };
+    return rotatedVelocities;
+};
+//# sourceMappingURL=rotate.js.map
 
 /***/ })
 /******/ ]);

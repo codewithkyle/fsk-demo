@@ -1,5 +1,4 @@
 import Block from './objects/Block';
-import getDistance from '../utils/distance';
 import detectCollision from '../utils/aabb';
 import getCollisionResponse from '../utils/collisionResonse';
 import Circle from './objects/Circle';

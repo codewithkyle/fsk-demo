@@ -1,4 +1,4 @@
-import InteractiveObject from "../canvas/InteractiveObject";
+import InteractiveObject from "../demo1/InteractiveObject";
 
 /**
  * Calculates the overlap between two AABB objects.
