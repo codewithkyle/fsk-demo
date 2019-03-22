@@ -76,9 +76,6 @@ export default class CanvasManager{
         this._mouse.prevY       = this._mouse.y;
         this._mouse.x           = e.x;
         this._mouse.y           = (e.y + scrollOffset);
-        this._countdown         = getRandomInt(1, 4);
-
-        this.checkForPop();
     }
 
     /**
@@ -104,78 +101,15 @@ export default class CanvasManager{
         this._mouse.y           = (e.y + scrollOffset);
     }
 
-    private checkForPop():void{
-        const mousePosition:IPosition = {
-            x: this._mouse.x,
-            y: this._mouse.y
-        }
-        // Check if a bubble is under the events apex
-        for(let i = 0; i < this._bubbles.length; i++){
-            if(checkCollision(this._bubbles[i].position, mousePosition, this._bubbles[i].radius, 0)){
-                if(this._bubbles[i].radius >= 16){
-                    const newBubbleRadius = this._bubbles[i].radius / 2;
-                    this._bubbles[i].pop();
-
-                    const numberOfBubbles = getRandomInt(2, 4);
-                    for(let i = 0; i <= numberOfBubbles; i++){
-                        const randomPosition:IPosition ={
-                            x: mousePosition.x,
-                            y: mousePosition.y
-                        }
-                        const newBubble = new Bubble(this.canvas, this._id, randomPosition, newBubbleRadius);
-                        this._bubbles.push(newBubble);
-                        this._id++;
-                    }
-                }
-
-                return;
-            }
-        }
-    }
-
     private spawnBubbles():void{
-        const numberOfBubbles = getRandomInt(4, 8);
+        const numberOfBubbles = getRandomInt(150,200);
 
-        // Huge bubbles
         for(let i = 0; i <= numberOfBubbles; i++){
             const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)) - 4,
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Large bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
+                x: getRandomInt(16, (this.canvas.width - 16)),
+                y: getRandomInt(16, (this.canvas.height - 16))
             }
             const newBubble = new Bubble(this.canvas, this._id, randomPosition, 32);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Medium bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 16);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Small bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 8);
             this._bubbles.push(newBubble);
             this._id++;
         }
@@ -226,27 +160,23 @@ export default class CanvasManager{
         // Draw bubbles
         for(let i = 0; i < this._bubbles.length; i++){
             this._context.beginPath();
-
-            if(this._bubbles[i].radius >= 32){
-                this._context.shadowColor = `hsla(${ this._bubbles[i].color }, 0.3)`;
-                this._context.shadowBlur = this._bubbles[i].radius;
-            }
-            
             this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
-            this._context.fillStyle = `hsla(${ this._bubbles[i].color }, 0.87)`;
+            this._context.lineWidth = 2;
+            this._context.fillStyle = `hsla(${ this._bubbles[i].color }, ${ this._bubbles[i].opacity })`;
+            this._context.strokeStyle = `hsla(${ this._bubbles[i].color }, 0.87)`;
+            
+            this._context.stroke();
             this._context.fill();
             this._context.closePath();
         }
     }
 
     private update(deltaTime:number):void{
-        // Update countdown
-        this._countdown -= deltaTime;
-
-        if(this._countdown <= 0){
-            this._countdown = getRandomInt(1, 4);
+        const mousePosition:IPosition   = {
+            x: this._mouse.x,
+            y: this._mouse.y
         }
-
+        
         for(let i = 0; i < this._bubbles.length; i++){
             this._bubbles[i].update(deltaTime);
 
@@ -256,6 +186,12 @@ export default class CanvasManager{
                     if(checkCollision(this._bubbles[i].position, this._bubbles[k].position, this._bubbles[i].radius, this._bubbles[k].radius)){
                         this.resolveCollision(this._bubbles[i], this._bubbles[k]);
                     }
+                }
+
+                if(checkCollision(this._bubbles[i].position, mousePosition, 256, 0)){
+                    this._bubbles[i].updateOpacity(deltaTime, 1);
+                }else{
+                    this._bubbles[i].updateOpacity(deltaTime, -1);
                 }
             }
         }

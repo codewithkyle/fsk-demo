@@ -93,6 +93,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CanvasManager_1 = __webpack_require__(1);
 const CanvasManager_2 = __webpack_require__(8);
+const CanvasManager_3 = __webpack_require__(12);
+const CanvasManager_4 = __webpack_require__(14);
 class App {
     constructor() {
         this.init();
@@ -107,6 +109,12 @@ class App {
             case 2:
                 new CanvasManager_2.default();
                 break;
+            case 3:
+                new CanvasManager_3.default();
+                break;
+            case 4:
+                new CanvasManager_4.default();
+                break;
         }
     }
 }
@@ -117,7 +125,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=App.js.map
 
 /***/ }),
 /* 1 */
@@ -143,7 +151,7 @@ class CanvasManager {
             this._mouse.prevY = this._mouse.y;
             this._mouse.x = e.x;
             this._mouse.y = (e.y + scrollOffset);
-            this._countdown = getRandomInt_1.default(1, 4);
+            this._countdown = getRandomInt_1.default(0, 2);
             this.spawnCircles();
         };
         /**
@@ -193,7 +201,7 @@ class CanvasManager {
         this._countdown = 2;
         this._blocks = [];
         this._bubbles = [];
-        this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
+        this._mouse = { x: this.canvas.width / 2, y: this.canvas.height / 2, prevX: this.canvas.width / 2, prevY: this.canvas.height / 2, isActive: false };
         this.init();
     }
     /**
@@ -257,7 +265,7 @@ class CanvasManager {
         // Update countdown
         this._countdown -= deltaTime;
         if (this._countdown <= 0) {
-            this._countdown = getRandomInt_1.default(1, 4);
+            this._countdown = getRandomInt_1.default(0, 2);
             this.spawnCircles();
         }
         // Update objects position
@@ -352,7 +360,7 @@ class InteractiveObject {
         this.size = size;
         this.id = id;
         this.isDead = false;
-        this.color = `hsla(${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(90, 98)}%,${getRandomInt_1.default(65, 80)}%,0.87)`;
+        this.color = `hsla(${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(92, 96)}%,${getRandomInt_1.default(70, 80)}%,0.87)`;
         this.velocity = { deltaX: 0, deltaY: 0 };
         this.canvas = canvas;
         this.init();
@@ -629,9 +637,7 @@ class CanvasManager {
         }
     }
     spawnBubbles() {
-        const minNumber = Math.floor(window.innerWidth / 100);
-        const maxNumber = Math.floor(window.innerWidth / 100);
-        const numberOfBubbles = getRandomInt_1.default(minNumber, maxNumber);
+        const numberOfBubbles = getRandomInt_1.default(4, 8);
         // Huge bubbles
         for (let i = 0; i <= numberOfBubbles; i++) {
             const randomPosition = {
@@ -643,7 +649,7 @@ class CanvasManager {
             this._id++;
         }
         // Large bubbles
-        for (let i = 0; i <= numberOfBubbles - 4; i++) {
+        for (let i = 0; i <= numberOfBubbles; i++) {
             const randomPosition = {
                 x: getRandomInt_1.default(64, (this.canvas.width - 64)),
                 y: getRandomInt_1.default(64, (this.canvas.height - 64))
@@ -653,7 +659,7 @@ class CanvasManager {
             this._id++;
         }
         // Medium bubbles
-        for (let i = 0; i <= numberOfBubbles - 6; i++) {
+        for (let i = 0; i <= numberOfBubbles; i++) {
             const randomPosition = {
                 x: getRandomInt_1.default(64, (this.canvas.width - 64)),
                 y: getRandomInt_1.default(64, (this.canvas.height - 64))
@@ -663,7 +669,7 @@ class CanvasManager {
             this._id++;
         }
         // Small bubbles
-        for (let i = 0; i <= numberOfBubbles - 8; i++) {
+        for (let i = 0; i <= numberOfBubbles; i++) {
             const randomPosition = {
                 x: getRandomInt_1.default(64, (this.canvas.width - 64)),
                 y: getRandomInt_1.default(64, (this.canvas.height - 64))
@@ -707,8 +713,10 @@ class CanvasManager {
         // Draw bubbles
         for (let i = 0; i < this._bubbles.length; i++) {
             this._context.beginPath();
-            this._context.shadowColor = `hsla(${this._bubbles[i].color}, 0.3)`;
-            this._context.shadowBlur = this._bubbles[i].radius;
+            if (this._bubbles[i].radius >= 32) {
+                this._context.shadowColor = `hsla(${this._bubbles[i].color}, 0.3)`;
+                this._context.shadowBlur = this._bubbles[i].radius;
+            }
             this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
             this._context.fillStyle = `hsla(${this._bubbles[i].color}, 0.87)`;
             this._context.fill();
@@ -855,6 +863,557 @@ exports.default = (velocity, angle) => {
     return rotatedVelocities;
 };
 //# sourceMappingURL=rotate.js.map
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+const Bubble_1 = __webpack_require__(13);
+const circleCollision_1 = __webpack_require__(10);
+const rotate_1 = __webpack_require__(11);
+class CanvasManager {
+    constructor() {
+        this.pause = (e) => {
+            if (e.key === ' ' && !this._paused) {
+                this._paused = true;
+            }
+            else if (e.key === ' ' && this._paused) {
+                this._paused = false;
+            }
+        };
+        /**
+         * Called when the user presses down the mouse button.
+         */
+        this.handleMouseDown = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = true;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+            this._countdown = getRandomInt_1.default(1, 4);
+            this.bubbleBomb();
+        };
+        /**
+         * Called whenever the mouse is moving over the canvas.
+         */
+        this.handleMouseMove = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called when the user releases the mouse button.
+         */
+        this.handleMouseUp = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = false;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called on the DOMs reapaint using `requestAnimationFrame`.
+         */
+        this.loop = () => {
+            const newTime = performance.now();
+            const deltaTime = (newTime - this._time) / 1000;
+            this._time = newTime;
+            if (!this._paused) {
+                this.update(deltaTime);
+            }
+            this.draw();
+            requestAnimationFrame(this.loop);
+        };
+        this.canvas = document.body.querySelector('.js-canvas');
+        if (this.canvas === null) {
+            console.log(`%c[Canvas Manager] %ccouldn't find the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        else {
+            console.log(`%c[Canvas Manager] %cfound the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this._context = this.canvas.getContext('2d');
+        console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
+        this._time = null;
+        this._countdown = 2;
+        this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
+        this._bubbles = [];
+        this._id = 0;
+        this._paused = false;
+        this.init();
+    }
+    /**
+     * Called when the `CanvasManager` is constructed.
+     */
+    init() {
+        this.spawnBubbles();
+        document.body.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
+        window.addEventListener('keydown', this.pause);
+        this._time = performance.now();
+        requestAnimationFrame(this.loop);
+    }
+    bubbleBomb() {
+        const numberOfBubbles = getRandomInt_1.default(4, 16);
+        for (let i = 0; i <= numberOfBubbles; i++) {
+            const mousePosition = {
+                x: this._mouse.x,
+                y: this._mouse.y
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, mousePosition, 8);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+    }
+    spawnBubbles() {
+        const numberOfBubbles = getRandomInt_1.default(32, 64);
+        for (let i = 0; i <= numberOfBubbles; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(16, (this.canvas.width - 16)),
+                y: getRandomInt_1.default(16, (this.canvas.height - 16))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, 8);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+    }
+    resolveCollision(bubble1, bubble2) {
+        const xVelocityDiff = bubble1.velocity.deltaX - bubble2.velocity.deltaX;
+        const yVelocityDiff = bubble1.velocity.deltaY - bubble2.velocity.deltaY;
+        const xDist = bubble2.position.x - bubble1.position.x;
+        const yDist = bubble2.position.y - bubble1.position.y;
+        // Prevent accidental overlap of particles
+        if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+            // Grab angle between the two colliding particles
+            const angle = -Math.atan2(bubble2.position.y - bubble1.position.y, bubble2.position.x - bubble1.position.x);
+            // Store mass in var for better readability in collision equation
+            const m1 = bubble1.mass;
+            const m2 = bubble2.mass;
+            // Velocity before equation
+            const u1 = rotate_1.default(bubble1.velocity, angle);
+            const u2 = rotate_1.default(bubble2.velocity, angle);
+            // Velocity after 1d collision equation
+            const v1 = { deltaX: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), deltaY: u1.y };
+            const v2 = { deltaX: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), deltaY: u2.y };
+            // Final velocity after rotating axis back to original location
+            const vFinal1 = rotate_1.default(v1, -angle);
+            const vFinal2 = rotate_1.default(v2, -angle);
+            // Swap particle velocities for realistic bounce effect
+            bubble1.velocity.deltaX = vFinal1.x;
+            bubble1.velocity.deltaY = vFinal1.y;
+            bubble2.velocity.deltaX = vFinal2.x;
+            bubble2.velocity.deltaY = vFinal2.y;
+        }
+    }
+    draw() {
+        // Clear the canvas at the beginning of each frame
+        this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Draw bubbles
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._context.beginPath();
+            // this._context.shadowColor = `hsla(${ this._bubbles[i].color }, 0.15)`;
+            // this._context.shadowBlur = this._bubbles[i].radius;
+            this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
+            this._context.fillStyle = `hsla(${this._bubbles[i].color}, 0.87)`;
+            this._context.fill();
+            this._context.closePath();
+        }
+    }
+    update(deltaTime) {
+        if (this._bubbles.length >= 256) {
+            const overLimitAmount = this._bubbles.length - 256;
+            for (let i = 0; i < overLimitAmount; i++) {
+                this._bubbles[i].markedForDeath = true;
+            }
+        }
+        const deadBubbles = [];
+        for (let i = 0; i < this._bubbles.length; i++) {
+            // Mark bubbles for death
+            if (this._bubbles[i].isDead) {
+                deadBubbles.push(this._bubbles[i]);
+            }
+            this._bubbles[i].update(deltaTime);
+            // Check for collision
+            for (let k = 0; k < this._bubbles.length; k++) {
+                if (this._bubbles[i].id !== this._bubbles[k].id) {
+                    if (circleCollision_1.default(this._bubbles[i].position, this._bubbles[k].position, this._bubbles[i].radius, this._bubbles[k].radius)) {
+                        this.resolveCollision(this._bubbles[i], this._bubbles[k]);
+                    }
+                }
+            }
+        }
+        // Remove dead bubbles
+        if (deadBubbles.length) {
+            for (let i = 0; i < deadBubbles.length; i++) {
+                const index = this._bubbles.indexOf(deadBubbles[i]);
+                this._bubbles.splice(index, 1);
+            }
+        }
+    }
+}
+exports.default = CanvasManager;
+//# sourceMappingURL=CanvasManager.js.map
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+class Bubble {
+    constructor(canvas, id, pos, size = 64, rot = 0) {
+        this.position = pos;
+        this.rotation = rot;
+        this.radius = size;
+        this.id = id;
+        this.isDead = false;
+        this.color = `${getRandomInt_1.default(0, 355)},${getRandomInt_1.default(96, 99)}%,${getRandomInt_1.default(65, 70)}%`;
+        this.mass = 1;
+        this.velocity = {
+            deltaX: getRandomInt_1.default(1, 6),
+            deltaY: getRandomInt_1.default(1, 6)
+        };
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaX *= -1;
+        }
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaY *= -1;
+        }
+        this.canvas = canvas;
+        this.init();
+    }
+    /**
+     * Called when the `Bubble` is constructed.
+     */
+    init() { }
+    pop() {
+        if (this.radius >= 16) {
+            this.radius = this.radius / 2;
+        }
+    }
+    update(deltaTime) {
+        if (this.markedForDeath) {
+            this.radius *= 0.92;
+            if (this.radius <= 1) {
+                this.isDead = true;
+            }
+        }
+        // Update position
+        this.position.x += this.velocity.deltaX;
+        this.position.y += this.velocity.deltaY;
+        // Check for out of bounds
+        const right = this.position.x + (this.radius / 2);
+        const bottom = this.position.y + (this.radius / 2);
+        const left = this.position.x - (this.radius / 2);
+        const top = this.position.y - (this.radius / 2);
+        if (left < 0) {
+            // Hit screen left
+            this.position.x = this.radius / 2;
+            this.velocity.deltaX *= -1;
+        }
+        if (top < 0) {
+            // Hit screen top
+            this.position.y = this.radius / 2;
+            this.velocity.deltaY *= -1;
+        }
+        if (right > this.canvas.width) {
+            // Hit screen right
+            this.position.x = (this.canvas.width - (this.radius / 2));
+            this.velocity.deltaX *= -1;
+        }
+        if (bottom > this.canvas.height) {
+            // Hit screen bottom
+            this.position.y = (this.canvas.height - (this.radius / 2));
+            this.velocity.deltaY *= -1;
+        }
+    }
+}
+exports.default = Bubble;
+//# sourceMappingURL=Bubble.js.map
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+const Bubble_1 = __webpack_require__(15);
+const circleCollision_1 = __webpack_require__(10);
+const rotate_1 = __webpack_require__(11);
+class CanvasManager {
+    constructor() {
+        this.pause = (e) => {
+            if (e.key === ' ' && !this._paused) {
+                this._paused = true;
+            }
+            else if (e.key === ' ' && this._paused) {
+                this._paused = false;
+            }
+        };
+        /**
+         * Called when the user presses down the mouse button.
+         */
+        this.handleMouseDown = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = true;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called whenever the mouse is moving over the canvas.
+         */
+        this.handleMouseMove = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called when the user releases the mouse button.
+         */
+        this.handleMouseUp = (e) => {
+            const scrollOffset = window.scrollY;
+            this._mouse.isActive = false;
+            this._mouse.prevX = this._mouse.x;
+            this._mouse.prevY = this._mouse.y;
+            this._mouse.x = e.x;
+            this._mouse.y = (e.y + scrollOffset);
+        };
+        /**
+         * Called on the DOMs reapaint using `requestAnimationFrame`.
+         */
+        this.loop = () => {
+            const newTime = performance.now();
+            const deltaTime = (newTime - this._time) / 1000;
+            this._time = newTime;
+            if (!this._paused) {
+                this.update(deltaTime);
+            }
+            this.draw();
+            requestAnimationFrame(this.loop);
+        };
+        this.canvas = document.body.querySelector('.js-canvas');
+        if (this.canvas === null) {
+            console.log(`%c[Canvas Manager] %ccouldn't find the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        else {
+            console.log(`%c[Canvas Manager] %cfound the canvas element`, 'color:#f4f94f', 'color:#eee');
+        }
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this._context = this.canvas.getContext('2d');
+        console.log(`%c[Canvas Manager] %csetting the context to 2d`, 'color:#f4f94f', 'color:#eee');
+        this._time = null;
+        this._countdown = 2;
+        this._mouse = { x: 0, y: 0, prevX: 0, prevY: 0, isActive: false };
+        this._bubbles = [];
+        this._id = 0;
+        this._paused = false;
+        this.init();
+    }
+    /**
+     * Called when the `CanvasManager` is constructed.
+     */
+    init() {
+        this.spawnBubbles();
+        document.body.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
+        window.addEventListener('keydown', this.pause);
+        this._time = performance.now();
+        requestAnimationFrame(this.loop);
+    }
+    spawnBubbles() {
+        const numberOfBubbles = getRandomInt_1.default(150, 200);
+        for (let i = 0; i <= numberOfBubbles; i++) {
+            const randomPosition = {
+                x: getRandomInt_1.default(16, (this.canvas.width - 16)),
+                y: getRandomInt_1.default(16, (this.canvas.height - 16))
+            };
+            const newBubble = new Bubble_1.default(this.canvas, this._id, randomPosition, 32);
+            this._bubbles.push(newBubble);
+            this._id++;
+        }
+    }
+    resolveCollision(bubble1, bubble2) {
+        const xVelocityDiff = bubble1.velocity.deltaX - bubble2.velocity.deltaX;
+        const yVelocityDiff = bubble1.velocity.deltaY - bubble2.velocity.deltaY;
+        const xDist = bubble2.position.x - bubble1.position.x;
+        const yDist = bubble2.position.y - bubble1.position.y;
+        // Prevent accidental overlap of particles
+        if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+            // Grab angle between the two colliding particles
+            const angle = -Math.atan2(bubble2.position.y - bubble1.position.y, bubble2.position.x - bubble1.position.x);
+            // Store mass in var for better readability in collision equation
+            const m1 = bubble1.mass;
+            const m2 = bubble2.mass;
+            // Velocity before equation
+            const u1 = rotate_1.default(bubble1.velocity, angle);
+            const u2 = rotate_1.default(bubble2.velocity, angle);
+            // Velocity after 1d collision equation
+            const v1 = { deltaX: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2), deltaY: u1.y };
+            const v2 = { deltaX: u2.x * (m1 - m2) / (m1 + m2) + u1.x * 2 * m2 / (m1 + m2), deltaY: u2.y };
+            // Final velocity after rotating axis back to original location
+            const vFinal1 = rotate_1.default(v1, -angle);
+            const vFinal2 = rotate_1.default(v2, -angle);
+            // Swap particle velocities for realistic bounce effect
+            bubble1.velocity.deltaX = vFinal1.x;
+            bubble1.velocity.deltaY = vFinal1.y;
+            bubble2.velocity.deltaX = vFinal2.x;
+            bubble2.velocity.deltaY = vFinal2.y;
+        }
+    }
+    draw() {
+        // Clear the canvas at the beginning of each frame
+        this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Draw bubbles
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._context.beginPath();
+            this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
+            this._context.lineWidth = 2;
+            this._context.fillStyle = `hsla(${this._bubbles[i].color}, ${this._bubbles[i].opacity})`;
+            this._context.strokeStyle = `hsla(${this._bubbles[i].color}, 0.87)`;
+            this._context.stroke();
+            this._context.fill();
+            this._context.closePath();
+        }
+    }
+    update(deltaTime) {
+        const mousePosition = {
+            x: this._mouse.x,
+            y: this._mouse.y
+        };
+        for (let i = 0; i < this._bubbles.length; i++) {
+            this._bubbles[i].update(deltaTime);
+            // Check for collision
+            for (let k = 0; k < this._bubbles.length; k++) {
+                if (this._bubbles[i].id !== this._bubbles[k].id) {
+                    if (circleCollision_1.default(this._bubbles[i].position, this._bubbles[k].position, this._bubbles[i].radius, this._bubbles[k].radius)) {
+                        this.resolveCollision(this._bubbles[i], this._bubbles[k]);
+                    }
+                }
+                if (circleCollision_1.default(this._bubbles[i].position, mousePosition, 256, 0)) {
+                    this._bubbles[i].updateOpacity(deltaTime, 1);
+                }
+                else {
+                    this._bubbles[i].updateOpacity(deltaTime, -1);
+                }
+            }
+        }
+    }
+}
+exports.default = CanvasManager;
+//# sourceMappingURL=CanvasManager.js.map
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const getRandomInt_1 = __webpack_require__(4);
+class Bubble {
+    constructor(canvas, id, pos, size = 64, rot = 0) {
+        this.position = pos;
+        this.rotation = rot;
+        this.radius = size;
+        this.id = id;
+        this.isDead = false;
+        this.color = this.getColor();
+        this.opacity = 0.05;
+        this.mass = 1;
+        this.velocity = {
+            deltaX: getRandomInt_1.default(1, 2),
+            deltaY: getRandomInt_1.default(1, 2)
+        };
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaX *= -1;
+        }
+        if (getRandomInt_1.default(0, 1) === 0) {
+            this.velocity.deltaY *= -1;
+        }
+        this.canvas = canvas;
+        this.init();
+    }
+    /**
+     * Called when the `Bubble` is constructed.
+     */
+    init() { }
+    getColor() {
+        const colorID = getRandomInt_1.default(1, 5);
+        switch (colorID) {
+            case 1:
+                return '11, 86%, 90%';
+            case 2:
+                return '47, 92%, 81%';
+            case 3:
+                return '90, 61%, 65%';
+            case 4:
+                return '182, 49%, 80%';
+            default:
+                return '26, 0%, 67%';
+        }
+    }
+    updateOpacity(deltaTime, direction) {
+        this.opacity += ((deltaTime * direction) * 0.0099);
+        if (this.opacity >= 0.3) {
+            this.opacity = 0.3;
+        }
+        else if (this.opacity <= 0.05) {
+            this.opacity = 0.05;
+        }
+    }
+    update(deltaTime) {
+        // Update position
+        this.position.x += this.velocity.deltaX;
+        this.position.y += this.velocity.deltaY;
+        // Check for out of bounds
+        const right = this.position.x + (this.radius / 2);
+        const bottom = this.position.y + (this.radius / 2);
+        const left = this.position.x - (this.radius / 2);
+        const top = this.position.y - (this.radius / 2);
+        if (left < 0) {
+            // Hit screen left
+            this.position.x = this.radius / 2;
+            this.velocity.deltaX *= -1;
+        }
+        if (top < 0) {
+            // Hit screen top
+            this.position.y = this.radius / 2;
+            this.velocity.deltaY *= -1;
+        }
+        if (right > this.canvas.width) {
+            // Hit screen right
+            this.position.x = (this.canvas.width - (this.radius / 2));
+            this.velocity.deltaX *= -1;
+        }
+        if (bottom > this.canvas.height) {
+            // Hit screen bottom
+            this.position.y = (this.canvas.height - (this.radius / 2));
+            this.velocity.deltaY *= -1;
+        }
+    }
+}
+exports.default = Bubble;
+//# sourceMappingURL=Bubble.js.map
 
 /***/ })
 /******/ ]);

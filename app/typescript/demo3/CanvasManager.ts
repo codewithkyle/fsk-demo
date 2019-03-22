@@ -78,7 +78,7 @@ export default class CanvasManager{
         this._mouse.y           = (e.y + scrollOffset);
         this._countdown         = getRandomInt(1, 4);
 
-        this.checkForPop();
+        this.bubbleBomb();
     }
 
     /**
@@ -104,76 +104,27 @@ export default class CanvasManager{
         this._mouse.y           = (e.y + scrollOffset);
     }
 
-    private checkForPop():void{
-        const mousePosition:IPosition = {
-            x: this._mouse.x,
-            y: this._mouse.y
-        }
-        // Check if a bubble is under the events apex
-        for(let i = 0; i < this._bubbles.length; i++){
-            if(checkCollision(this._bubbles[i].position, mousePosition, this._bubbles[i].radius, 0)){
-                if(this._bubbles[i].radius >= 16){
-                    const newBubbleRadius = this._bubbles[i].radius / 2;
-                    this._bubbles[i].pop();
+    private bubbleBomb():void{
+        const numberOfBubbles = getRandomInt(4,16);
 
-                    const numberOfBubbles = getRandomInt(2, 4);
-                    for(let i = 0; i <= numberOfBubbles; i++){
-                        const randomPosition:IPosition ={
-                            x: mousePosition.x,
-                            y: mousePosition.y
-                        }
-                        const newBubble = new Bubble(this.canvas, this._id, randomPosition, newBubbleRadius);
-                        this._bubbles.push(newBubble);
-                        this._id++;
-                    }
-                }
-
-                return;
+        for(let i = 0; i <= numberOfBubbles; i++){
+            const mousePosition:IPosition ={
+                x: this._mouse.x,
+                y: this._mouse.y
             }
+            const newBubble = new Bubble(this.canvas, this._id, mousePosition, 8);
+            this._bubbles.push(newBubble);
+            this._id++;
         }
     }
 
     private spawnBubbles():void{
-        const numberOfBubbles = getRandomInt(4, 8);
+        const numberOfBubbles = getRandomInt(32,64);
 
-        // Huge bubbles
         for(let i = 0; i <= numberOfBubbles; i++){
             const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)) - 4,
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Large bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 32);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Medium bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
-            }
-            const newBubble = new Bubble(this.canvas, this._id, randomPosition, 16);
-            this._bubbles.push(newBubble);
-            this._id++;
-        }
-
-        // Small bubbles
-        for(let i = 0; i <= numberOfBubbles; i++){
-            const randomPosition:IPosition ={
-                x: getRandomInt(64, (this.canvas.width - 64)),
-                y: getRandomInt(64, (this.canvas.height - 64))
+                x: getRandomInt(16, (this.canvas.width - 16)),
+                y: getRandomInt(16, (this.canvas.height - 16))
             }
             const newBubble = new Bubble(this.canvas, this._id, randomPosition, 8);
             this._bubbles.push(newBubble);
@@ -226,12 +177,8 @@ export default class CanvasManager{
         // Draw bubbles
         for(let i = 0; i < this._bubbles.length; i++){
             this._context.beginPath();
-
-            if(this._bubbles[i].radius >= 32){
-                this._context.shadowColor = `hsla(${ this._bubbles[i].color }, 0.3)`;
-                this._context.shadowBlur = this._bubbles[i].radius;
-            }
-            
+            // this._context.shadowColor = `hsla(${ this._bubbles[i].color }, 0.15)`;
+            // this._context.shadowBlur = this._bubbles[i].radius;
             this._context.arc(this._bubbles[i].position.x, this._bubbles[i].position.y, this._bubbles[i].radius, 0, (2 * Math.PI));
             this._context.fillStyle = `hsla(${ this._bubbles[i].color }, 0.87)`;
             this._context.fill();
@@ -240,14 +187,21 @@ export default class CanvasManager{
     }
 
     private update(deltaTime:number):void{
-        // Update countdown
-        this._countdown -= deltaTime;
-
-        if(this._countdown <= 0){
-            this._countdown = getRandomInt(1, 4);
+        if(this._bubbles.length >= 256){
+            const overLimitAmount = this._bubbles.length - 256;
+            for(let i = 0; i < overLimitAmount; i++){
+                this._bubbles[i].markedForDeath = true;
+            }
         }
 
+        const deadBubbles:Array<Bubble> = [];
         for(let i = 0; i < this._bubbles.length; i++){
+            
+            // Mark bubbles for death
+            if(this._bubbles[i].isDead){
+                deadBubbles.push(this._bubbles[i]);
+            }
+            
             this._bubbles[i].update(deltaTime);
 
             // Check for collision
@@ -257,6 +211,14 @@ export default class CanvasManager{
                         this.resolveCollision(this._bubbles[i], this._bubbles[k]);
                     }
                 }
+            }
+        }
+
+        // Remove dead bubbles
+        if(deadBubbles.length){
+            for(let i = 0; i < deadBubbles.length; i++){
+                const index = this._bubbles.indexOf(deadBubbles[i]);
+                this._bubbles.splice(index, 1);
             }
         }
     }

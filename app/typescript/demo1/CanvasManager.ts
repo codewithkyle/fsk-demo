@@ -34,7 +34,7 @@ export default class CanvasManager{
         this._countdown = 2;
         this._blocks    = [];
         this._bubbles   = [];
-        this._mouse     = { x:0, y:0, prevX:0, prevY:0, isActive: false };
+        this._mouse     = { x:this.canvas.width / 2, y: this.canvas.height / 2, prevX: this.canvas.width / 2, prevY:this.canvas.height / 2, isActive: false };
 
         this.init();
     }
@@ -63,7 +63,7 @@ export default class CanvasManager{
         this._mouse.prevY       = this._mouse.y;
         this._mouse.x           = e.x;
         this._mouse.y           = (e.y + scrollOffset);
-        this._countdown         = getRandomInt(1, 4);
+        this._countdown         = getRandomInt(0, 2);
         this.spawnCircles();
     }
 
@@ -147,7 +147,7 @@ export default class CanvasManager{
         this._countdown -= deltaTime;
 
         if(this._countdown <= 0){
-            this._countdown = getRandomInt(1, 4);
+            this._countdown = getRandomInt(0, 2);
             this.spawnCircles();
         }
         
