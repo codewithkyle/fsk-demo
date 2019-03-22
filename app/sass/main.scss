@@ -1,3 +1,17 @@
+#demo-2{
+    h1{
+        text-shadow: 0 0px 4px rgba(#77787b,0.3);
+    }
+
+    h2{
+        text-shadow: 0 0px 4px rgba(#77787b, 0.3);
+    }
+
+    img{
+        filter: drop-shadow(0 0px 4px rgba(#77787b,0.3));
+    }
+}
+
 .c-homepage-hero{
     position: absolute;
     top: 0;

@@ -87,7 +87,9 @@ export default class CanvasManager{
     }
 
     private spawnBubbles():void{
-        const numberOfBubbles = getRandomInt(14, 26);
+        const minNumber = Math.floor(window.innerWidth / 100);
+        const maxNumber = Math.floor(window.innerWidth / 100) + 4;
+        const numberOfBubbles = getRandomInt(minNumber, maxNumber);
         // const numberOfBubbles = 2;
         for(let i = 0; i <= numberOfBubbles; i++){
             const randomPosition:IPosition ={

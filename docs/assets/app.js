@@ -117,7 +117,7 @@ exports.default = App;
 (() => {
     new App();
 })();
-//# sourceMappingURL=App.js.map
+//# sourceMappingURL=app.js.map
 
 /***/ }),
 /* 1 */
@@ -589,7 +589,9 @@ class CanvasManager {
         requestAnimationFrame(this.loop);
     }
     spawnBubbles() {
-        const numberOfBubbles = getRandomInt_1.default(14, 26);
+        const minNumber = Math.floor(window.innerWidth / 100);
+        const maxNumber = Math.floor(window.innerWidth / 100) + 4;
+        const numberOfBubbles = getRandomInt_1.default(minNumber, maxNumber);
         // const numberOfBubbles = 2;
         for (let i = 0; i <= numberOfBubbles; i++) {
             const randomPosition = {
